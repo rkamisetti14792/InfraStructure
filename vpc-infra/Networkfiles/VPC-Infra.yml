@@ -38,7 +38,7 @@ Parameters:
     Type: String
   KeyName:
     Description: Select you existing key pair
-    Type: List<AWS::EC2::KeyPair::KeyName>
+    Type: AWS::EC2::KeyPair::KeyName
   VpcCIDR:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
@@ -229,6 +229,11 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable2
       SubnetId: !Ref PrivateSubnet2
 Outputs:
+  EnvironmentName:
+    Description:  EnvironmentName
+    Value: !Ref EnvironmentName
+    Export:
+      Name: Infra-Environmentname
   VPC:
     Description: A reference to the created VPC
     Value: !Ref VPC

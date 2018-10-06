@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  rkamisetti/ecs-cloudformation
+  Security group stack
+Resources:
+  # This security group defines who/where is allowed to access the ECS hosts directly.
+  ECSInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue Infrastructure-vpcid
+      GroupName: !Join ["", [!ImportValue Infra-Environmentname, "-ecs-instances"]]
+      GroupDescription: Access to the ECS instances and the tasks/containers that run on them
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          IpProtocol: -1
+      Tags:
+        - Key: Name
+          Value: !Join ["", [!ImportValue Infra-Environmentname, "-ecs-instances"]]
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue Infrastructure-vpcid
+      GroupName: !Join ["", [!ImportValue Infra-Environmentname, "-load-balancers"]]
+      GroupDescription: Access to the load balancer that sits in front of ECS
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+      Tags:
+        - Key: Name
+          Value: !Join ["", [!ImportValue Infra-Environmentname, "-load-balancers"]]
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue Infrastructure-vpcid
+      GroupName: !Join ["", [!ImportValue Infra-Environmentname, "-file-systems"]]
+      GroupDescription: Access to the Elastic File System for ECS instances
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+      Tags:
+        - Key: Name
+          Value: !Join ["", [!ImportValue Infra-Environmentname, "-file-systems"]]
+Outputs:
+  ECSInstanceSecurityGroup:
+    Description: A reference to the security group for ECS instances
+    Value: !Ref ECSInstanceSecurityGroup
+    Export:
+      Name: ECS-sg
+  LoadBalancerSecurityGroup:
+    Description: A reference to the security group for load balancers
+    Value: !Ref LoadBalancerSecurityGroup
+    Export:
+      Name: ELB-sg
+  MountTargetSecurityGroup:
+    Description: A reference to the security group for EFS mount targets
+    Value: !Ref MountTargetSecurityGroup
+    Export:
+      Name: mounttarget-sg
